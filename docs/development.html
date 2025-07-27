@@ -167,18 +167,18 @@ self.player2_strategy: AIStrategy</code></pre>
             <pre><code>from enum import Enum
 
 class GameMode(Enum):
-    HUMAN_VS_HUMAN = "human_vs_human"
-    HUMAN_VS_AI = "human_vs_ai" 
-    AI_VS_AI = "ai_vs_ai"
+    HUMAN_VS_HUMAN = 1
+    HUMAN_VS_AI = 2
+    AI_VS_AI = 3
 
 class Player(Enum):
     PLAYER1 = 1  # 青色プレイヤー（下から上へ）
     PLAYER2 = 2  # 赤色プレイヤー（上から下へ）
 
 class AIStrategy(Enum):
-    AGGRESSIVE = "aggressive"  # 攻撃的
-    DEFENSIVE = "defensive"    # 守備的  
-    BALANCED = "balanced"      # バランス型</code></pre>
+    AGGRESSIVE = 1   # 攻撃的に相手を妨害
+    DEFENSIVE = 2    # 自分のゴールを優先
+    BALANCED = 3     # バランス型</code></pre>
 
             <h2>🎮 UI システム (SyncridorUI)</h2>
 
@@ -337,11 +337,11 @@ pip install pylint black pytest  # コード品質ツール</code></pre>
 
             <h4>1. AIStrategy列挙型の拡張</h4>
             <pre><code>class AIStrategy(Enum):
-    AGGRESSIVE = "aggressive"
-    DEFENSIVE = "defensive"
-    BALANCED = "balanced"
-    MINIMAX = "minimax"        # 新しい戦略
-    LEARNED = "learned"        # 機械学習ベース</code></pre>
+    AGGRESSIVE = 1
+    DEFENSIVE = 2
+    BALANCED = 3
+    MINIMAX = 4        # 新しい戦略
+    LEARNED = 5        # 機械学習ベース</code></pre>
 
             <h4>2. 戦略メソッドの実装</h4>
             <pre><code>def ai_make_move_minimax(self):
@@ -395,11 +395,11 @@ pip install pylint black pytest  # コード品質ツール</code></pre>
 
             <h4>1. GameMode の拡張</h4>
             <pre><code>class GameMode(Enum):
-    HUMAN_VS_HUMAN = "human_vs_human"
-    HUMAN_VS_AI = "human_vs_ai"
-    AI_VS_AI = "ai_vs_ai"
-    TOURNAMENT = "tournament"     # トーナメントモード
-    TRAINING = "training"         # 訓練モード</code></pre>
+    HUMAN_VS_HUMAN = 1
+    HUMAN_VS_AI = 2
+    AI_VS_AI = 3
+    TOURNAMENT = 4     # トーナメントモード
+    TRAINING = 5       # 訓練モード</code></pre>
 
             <h4>2. モード固有のロジック実装</h4>
             <pre><code>def handle_tournament_mode(self):
