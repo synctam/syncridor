@@ -721,8 +721,8 @@ class SyncridorUI:
         pygame.draw.circle(self.screen, RED, (x2, y2), CELL_SIZE // 3)
     
     def draw_ui(self):
-        # 現在のプレイヤー表示
-        current_text = f"Current Player: {'Blue' if self.game.current_player == Player.PLAYER1 else 'Red'}"
+        # 現在のプレイヤー表示（バージョン情報を含む）
+        current_text = f"Current Player: {'Blue' if self.game.current_player == Player.PLAYER1 else 'Red'} | {VERSION}"
         text_surface = self.small_font.render(current_text, True, BLACK)
         self.screen.blit(text_surface, (10, 10))
         
@@ -755,9 +755,7 @@ class SyncridorUI:
             text_surface = self.small_font.render(instruction, True, BLACK)
             self.screen.blit(text_surface, (WINDOW_WIDTH - 200, 10 + i * 25))
         
-        # バージョン表示（Web版 - 左上の操作説明の下に配置）
-        version_text = self.small_font.render(f"{VERSION}", True, BLACK)
-        self.screen.blit(version_text, (10, 130))
+        # バージョン表示は現在のプレイヤー表示に統合済み
         
         # ゲーム終了時
         if self.game.game_over:
