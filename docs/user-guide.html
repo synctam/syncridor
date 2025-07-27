@@ -402,12 +402,17 @@
             <h2>🔧 設定とカスタマイズ</h2>
 
             <h3>ゲーム設定</h3>
-            <p>現在のバージョンでは設定ファイルによるカスタマイズが可能です：</p>
+            <p>現在のバージョンでは、ソースコード内の定数を変更することでカスタマイズが可能です：</p>
             <ul>
-                <li><strong>ボードサイズ</strong>: BOARD_SIZE定数の変更</li>
-                <li><strong>初期壁数</strong>: プレイヤーの初期壁数調整</li>
-                <li><strong>AI戦略</strong>: デフォルトAI戦略の変更</li>
+                <li><strong>ボードサイズ</strong>: <code>syncridor_game.py</code>内のBOARD_SIZE定数の変更</li>
+                <li><strong>初期壁数</strong>: <code>__init__</code>メソッド内のプレイヤー初期壁数調整</li>
+                <li><strong>AI戦略</strong>: <code>setup_ai_strategies</code>メソッド内のデフォルトAI戦略の変更</li>
             </ul>
+            
+            <div class="warning-box">
+                <h4>⚠️ 注意</h4>
+                <p>これらの変更にはPythonコードの編集が必要です。専用の設定ファイル機能は現在実装されていません。</p>
+            </div>
 
             <h3>視覚設定</h3>
             <ul>
