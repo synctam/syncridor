@@ -735,7 +735,7 @@ class SyncridorUI:
         # 壁の残り数の位置を調整
         wall_y_offset = 65 if self.placing_wall else 40
         walls1_text = f"Blue Walls: {self.game.player1_walls}"
-        walls2_text = f"Red Walls: {self.game.player2_walls}"
+        walls2_text = f"Red Walls: {self.game.player2_walls} | {VERSION}"
         walls1_surface = self.small_font.render(walls1_text, True, BLUE)
         walls2_surface = self.small_font.render(walls2_text, True, RED)
         self.screen.blit(walls1_surface, (10, wall_y_offset))
@@ -898,6 +898,7 @@ class SyncridorUI:
 async def main():
     """Pygbag対応のメイン関数"""
     print("Syncridor - Strategic Pathfinding Game (Web版)")
+    print(f"Version: {VERSION}")
     print("Copyright (c) 2025 synctam@gmail.com")
     print("Licensed under MIT License")
     print("=" * 50)
