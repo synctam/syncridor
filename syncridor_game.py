@@ -19,6 +19,7 @@ import time
 pygame.init()
 
 # 定数
+VERSION = "v1.1.0"
 WINDOW_WIDTH = 800
 WINDOW_HEIGHT = 700
 BOARD_SIZE = 9
@@ -697,7 +698,10 @@ class SyncridorUI:
                     height = CELL_SIZE * 2
                 
                 # 半透明のプレビュー表示
-                preview_color = (*BLUE, 128) if self.game.current_player == Player.PLAYER1 else (*RED, 128)
+                if self.game.current_player == Player.PLAYER1:
+                    preview_color = (BLUE[0], BLUE[1], BLUE[2], 128)
+                else:
+                    preview_color = (RED[0], RED[1], RED[2], 128)
                 preview_surface = pygame.Surface((width, height), pygame.SRCALPHA)
                 preview_surface.fill(preview_color)
                 self.screen.blit(preview_surface, (x, y))
@@ -729,7 +733,7 @@ class SyncridorUI:
         
         # 壁の向き表示
         if self.placing_wall:
-            orientation_text = f"Wall Direction: {'Horizontal' if self.wall_horizontal else 'Vertical'} (Press R to rotate)"
+            orientation_text = f"Wall Direction: {'Horizontal' if self.wall_horizontal else 'Vertical'} (Press T to rotate)"
             orientation_surface = self.small_font.render(orientation_text, True, BLACK)
             self.screen.blit(orientation_surface, (10, 35))
         # 壁の残り数の位置を調整
@@ -741,14 +745,19 @@ class SyncridorUI:
         instructions = [
             "Left click: Move/Select",
             "Right click: Place wall",
-            "R: Rotate wall direction",
+            "T: Rotate wall direction",
             "Space: Toggle wall mode",
+            "R: Restart game",
             "M: Main menu"
         ]
         
         for i, instruction in enumerate(instructions):
             text_surface = self.small_font.render(instruction, True, BLACK)
             self.screen.blit(text_surface, (WINDOW_WIDTH - 200, 10 + i * 25))
+        
+        # バージョン表示
+        version_text = self.small_font.render(VERSION, True, GRAY)
+        self.screen.blit(version_text, (WINDOW_WIDTH - 60, WINDOW_HEIGHT - 25))
         
         # ゲーム終了時
         if self.game.game_over:
@@ -805,11 +814,11 @@ class SyncridorUI:
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_SPACE:
                 self.placing_wall = not self.placing_wall
-            elif event.key == pygame.K_r:
+            elif event.key == pygame.K_t:
                 if self.placing_wall:
                     self.wall_horizontal = not self.wall_horizontal
-                else:
-                    self.game.reset_game()
+            elif event.key == pygame.K_r:
+                self.game.reset_game()
             elif event.key == pygame.K_m:
                 self.show_menu = True
                 self.game = None
