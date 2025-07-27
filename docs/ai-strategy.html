@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI戦略解説 - Syncridor</title>
+    <link rel="stylesheet" href="css/style.css">
+    <meta name="description" content="Syncridorの距離ベースAIアルゴリズムと3つの戦略の詳細解説">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🤖 AI戦略解説</h1>
+            <p>距離ベースアルゴリズムと戦略的意思決定</p>
+        </header>
+
+        <nav>
+            <ul>
+                <li><a href="index.html">ホーム</a></li>
+                <li><a href="user-guide.html">ユーザーガイド</a></li>
+                <li><a href="installation.html">インストール</a></li>
+                <li><a href="ai-strategy.html" class="active">AI戦略</a></li>
+                <li><a href="development.html">開発者向け</a></li>
+            </ul>
+        </nav>
+
+        <main>
+            <h1>AI戦略の詳細解説</h1>
+
+            <div class="info-box">
+                <p><strong>Syncridor</strong>のAIは、距離ベースの戦略アルゴリズムを使用して、リアルタイムで最適な行動を決定します。このページでは、3つのAI戦略の実装と戦略的思考プロセスを詳しく解説します。</p>
+            </div>
+
+            <h2>🧠 基本アルゴリズム</h2>
+
+            <h3>1. 最短経路探索（BFS）</h3>
+            <p>すべてのAI戦略の基盤となるのは、<strong>幅優先探索（BFS: Breadth-First Search）</strong>アルゴリズムです。</p>
+
+            <div class="success-box">
+                <h4>BFS アルゴリズムの特徴</h4>
+                <ul>
+                    <li><strong>最短距離保証</strong>: 必ず最短経路を発見</li>
+                    <li><strong>壁の考慮</strong>: 配置済みの壁による経路遮断を正確に処理</li>
+                    <li><strong>計算効率</strong>: O(V + E) の時間計算量で高速動作</li>
+                    <li><strong>動的更新</strong>: 壁が追加されるたびにリアルタイム再計算</li>
+                </ul>
+            </div>
+
+            <pre><code>def get_shortest_path(self, start_pos, goal_row, walls=None):
+    """BFS（幅優先探索）でゴールまでの最短経路を計算
+    
+    Args:
+        start_pos: 開始位置 (row, col)
+        goal_row: ゴール行（プレイヤー1: 0, プレイヤー2: 8）
+        walls: 考慮する壁のリスト
+    
+    Returns:
+        最短経路のリスト [(row, col), ...]
+    """
+    from collections import deque
+    
+    queue = deque([(start_pos, [start_pos])])
+    visited = {start_pos}
+    
+    while queue:
+        (row, col), path = queue.popleft()
+        
+        # ゴール到達チェック
+        if row == goal_row:
+            return path
+            
+        # 4方向への移動を探索
+        for dr, dc in [(0, 1), (0, -1), (1, 0), (-1, 0)]:
+            new_row, new_col = row + dr, col + dc
+            # 移動可能性と壁による阻止をチェック
+            if self.can_move_to(new_row, new_col, walls):
+                queue.append(((new_row, new_col), path + [(new_row, new_col)]))
+                visited.add((new_row, new_col))</code></pre>
+
+            <h3>2. 戦略的壁配置アルゴリズム</h3>
+            <p>AIは全ての可能な壁位置を評価し、スコアベースで最適な配置を決定します。</p>
+
+            <h4>スコア計算の仕組み</h4>
+            <table>
+                <thead>
+                    <tr>
+                        <th>要素</th>
+                        <th>計算方法</th>
+                        <th>影響</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>相手延長効果</strong></td>
+                        <td><code>opponent_delay × 2.0</code></td>
+                        <td>相手の距離を増加させる効果（加点）</td>
+                    </tr>
+                    <tr>
+                        <td><strong>自分への影響</strong></td>
+                        <td><code>current_delay × 1.0</code></td>
+                        <td>自分の距離増加による減点</td>
+                    </tr>
+                    <tr>
+                        <td><strong>近接ボーナス</strong></td>
+                        <td><code>opponent_delay × 1.5</code></td>
+                        <td>相手がゴールに近い場合の追加ボーナス</td>
+                    </tr>
+                    <tr>
+                        <td><strong>垂直壁ボーナス</strong></td>
+                        <td><code>+0.5</code></td>
+                        <td>垂直壁の戦略的価値を向上</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <pre><code>def find_strategic_wall(self):
+    """戦略的な壁配置位置を探索"""
+    best_wall = None
+    best_score = 0
+    
+    # 全ての可能な壁位置を評価
+    for row in range(8):
+        for col in range(8):
+            for is_horizontal in [True, False]:
+                wall = Wall(row, col, is_horizontal, self.current_player)
+                
+                if self.can_place_wall(wall):
+                    score = self.evaluate_wall_placement(wall)
+                    
+                    if score > best_score:
+                        best_score = score
+                        best_wall = wall
+    
+    return best_wall</code></pre>
+
+            <h2>🎯 3つのAI戦略</h2>
+
+            <h3>A. 攻撃的AI (AGGRESSIVE)</h3>
+            
+            <div class="warning-box">
+                <h4>🔥 戦略の特徴</h4>
+                <p><strong>「相手の妨害を最優先」</strong> - 積極的な壁配置で相手の進路を阻害し、ゲーム時間を延長することで優位を築きます。</p>
+            </div>
+
+            <h4>壁配置確率</h4>
+            <ul>
+                <li><strong>不利・互角時（距離差 ≥ 0）</strong>: <span style="color: #e74c3c; font-weight: bold;">60%</span></li>
+                <li><strong>有利時（距離差 < 0）</strong>: <span style="color: #f39c12; font-weight: bold;">20%</span></li>
+            </ul>
+
+            <h4>戦術的アプローチ</h4>
+            <ol>
+                <li><strong>序盤</strong>: 相手の主要経路を早期に特定・妨害</li>
+                <li><strong>中盤</strong>: 継続的な壁配置で相手を迂回路へ誘導</li>
+                <li><strong>終盤</strong>: 壁の残数を活用した最終的な封じ込め</li>
+            </ol>
+
+            <pre><code>def ai_make_move_aggressive(self):
+    """攻撃的AI戦略の実装"""
+    current_distance = self.get_shortest_path_length(self.player1_pos, 0)
+    opponent_distance = self.get_shortest_path_length(self.player2_pos, 8)
+    distance_diff = current_distance - opponent_distance
+    
+    # 不利・互角時は積極的に壁配置
+    wall_probability = 0.6 if distance_diff >= 0 else 0.2
+    
+    if random.random() < wall_probability and self.player1_walls > 0:
+        strategic_wall = self.find_strategic_wall()
+        if strategic_wall and self.place_wall(strategic_wall):
+            return True
+    
+    # 壁配置失敗時は最短経路で移動
+    return self.move_along_shortest_path()</code></pre>
+
+            <h3>B. 守備的AI (DEFENSIVE)</h3>
+            
+            <div class="success-box">
+                <h4>🛡️ 戦略の特徴</h4>
+                <p><strong>「効率的なゴール到達を最優先」</strong> - 最短経路での移動を重視し、必要最小限の壁配置で資源を温存します。</p>
+            </div>
+
+            <h4>壁配置確率</h4>
+            <ul>
+                <li><strong>2歩以上の劣勢時</strong>: <span style="color: #e74c3c; font-weight: bold;">40%</span></li>
+                <li><strong>1歩の劣勢時</strong>: <span style="color: #f39c12; font-weight: bold;">20%</span></li>
+                <li><strong>有利・互角時</strong>: <span style="color: #27ae60; font-weight: bold;">5%</span></li>
+            </ul>
+
+            <h4>戦術的アプローチ</h4>
+            <ol>
+                <li><strong>基本方針</strong>: 最短経路での直進を最優先</li>
+                <li><strong>防御判断</strong>: 明確な劣勢時のみ戦略的介入</li>
+                <li><strong>資源管理</strong>: 壁の無駄遣いを徹底的に回避</li>
+            </ol>
+
+            <pre><code>def ai_make_move_defensive(self):
+    """守備的AI戦略の実装"""
+    current_distance = self.get_shortest_path_length(self.player1_pos, 0)
+    opponent_distance = self.get_shortest_path_length(self.player2_pos, 8)
+    distance_diff = current_distance - opponent_distance
+    
+    # 劣勢の程度に応じた壁配置確率
+    if distance_diff >= 2:
+        wall_probability = 0.4      # 大幅劣勢
+    elif distance_diff == 1:
+        wall_probability = 0.2      # 軽微劣勢
+    else:
+        wall_probability = 0.05     # 有利・互角
+    
+    if random.random() < wall_probability and self.player1_walls > 0:
+        strategic_wall = self.find_strategic_wall()
+        if strategic_wall and self.place_wall(strategic_wall):
+            return True
+    
+    return self.move_along_shortest_path()</code></pre>
+
+            <h3>C. バランス型AI (BALANCED)</h3>
+            
+            <div class="info-box">
+                <h4>⚖️ 戦略の特徴</h4>
+                <p><strong>「状況に応じた適応的戦略」</strong> - 攻撃と守備のバランスを取り、状況に応じて戦術を柔軟に変更します。</p>
+            </div>
+
+            <h4>壁配置確率</h4>
+            <ul>
+                <li><strong>不利時（距離差 ≥ 1）</strong>: <span style="color: #e74c3c; font-weight: bold;">45%</span></li>
+                <li><strong>互角時（距離差 = 0）</strong>: <span style="color: #f39c12; font-weight: bold;">30%</span></li>
+                <li><strong>有利時（距離差 < 0）</strong>: <span style="color: #27ae60; font-weight: bold;">15%</span></li>
+            </ul>
+
+            <h4>戦術的アプローチ</h4>
+            <ol>
+                <li><strong>適応性</strong>: 距離差に比例した壁配置戦略</li>
+                <li><strong>中庸路線</strong>: 極端に偏らない安定した戦術</li>
+                <li><strong>状況判断</strong>: ゲーム展開に応じた柔軟な対応</li>
+            </ol>
+
+            <h2>📊 AI戦略の比較分析</h2>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>戦略</th>
+                        <th>壁使用傾向</th>
+                        <th>ゲーム時間</th>
+                        <th>勝率特性</th>
+                        <th>推奨対戦相手</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>攻撃的</strong></td>
+                        <td>積極的（早期消費）</td>
+                        <td>長い</td>
+                        <td>変動大</td>
+                        <td>守備的AI・人間</td>
+                    </tr>
+                    <tr>
+                        <td><strong>守備的</strong></td>
+                        <td>保守的（温存重視）</td>
+                        <td>短い</td>
+                        <td>安定高</td>
+                        <td>攻撃的AI・初心者</td>
+                    </tr>
+                    <tr>
+                        <td><strong>バランス型</strong></td>
+                        <td>状況適応</td>
+                        <td>中程度</td>
+                        <td>中程度</td>
+                        <td>すべての相手</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h2>🔬 実戦での戦略効果</h2>
+
+            <h3>攻撃的AI vs 守備的AI の典型的な展開</h3>
+
+            <div class="warning-box">
+                <h4>観察される傾向</h4>
+                <ul>
+                    <li><strong>攻撃的AI</strong>: 序盤から壁を多用し、相手を迂回路に誘導</li>
+                    <li><strong>守備的AI</strong>: 直進重視で効率的にゴールに向かう</li>
+                    <li><strong>結果</strong>: 守備的AIが資源効率の良さで勝利する傾向</li>
+                </ul>
+            </div>
+
+            <h3>人間 vs AI の戦略的ヒント</h3>
+
+            <h4>対攻撃的AI</h4>
+            <ul>
+                <li>複数の経路オプションを常に確保</li>
+                <li>相手の壁配置パターンを学習・予測</li>
+                <li>終盤での壁切れを狙う</li>
+            </ul>
+
+            <h4>対守備的AI</h4>
+            <ul>
+                <li>積極的な壁配置で相手のペースを乱す</li>
+                <li>序盤での妨害が特に効果的</li>
+                <li>直進経路の早期封鎖を狙う</li>
+            </ul>
+
+            <h4>対バランス型AI</h4>
+            <ul>
+                <li>状況に応じて戦術を使い分ける</li>
+                <li>予測困難な動きで相手を翻弄</li>
+                <li>中長期的な戦略立案が重要</li>
+            </ul>
+
+            <h2>🚀 今後の改善可能性</h2>
+
+            <h3>現在のAIの限界</h3>
+            <ul>
+                <li><strong>短期的思考</strong>: 1手先の評価のみ</li>
+                <li><strong>確率的判断</strong>: 完全な論理的判断ではない</li>
+                <li><strong>パターン学習なし</strong>: 過去の対戦からの学習機能なし</li>
+            </ul>
+
+            <h3>高度なAI実装案</h3>
+
+            <div class="success-box">
+                <h4>実装可能な改善</h4>
+                <ul>
+                    <li><strong>ミニマックス法</strong>: 数手先を読む戦略的思考</li>
+                    <li><strong>アルファベータ剪定</strong>: 計算効率の大幅向上</li>
+                    <li><strong>評価関数の改善</strong>: より詳細な盤面評価</li>
+                    <li><strong>機械学習</strong>: 強化学習による自己改善</li>
+                    <li><strong>開局定跡</strong>: 効果的な序盤戦略のデータベース</li>
+                </ul>
+            </div>
+
+            <h2>🔗 関連情報</h2>
+            <ul>
+                <li><a href="development.html">開発者向けドキュメント</a> - AI実装の詳細</li>
+                <li><a href="user-guide.html">ユーザーガイド</a> - AI vs AI観戦の楽しみ方</li>
+                <li><a href="../test_syncridor.py">テストスイート</a> - AI機能のテスト</li>
+            </ul>
+
+        </main>
+
+        <footer>
+            <p>&copy; 2025 synctam@gmail.com | Licensed under MIT License | Developed with ❤️ and Claude AI</p>
+        </footer>
+    </div>
+</body>
+</html>

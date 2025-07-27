@@ -4,6 +4,18 @@
 
 このプロジェクトは、Pygameを使用して開発されたSyncridorボードゲームの実装です。特に、距離ベースの戦略を持つ3種類のAIが実装されており、人間対AI、AI対AIの対戦が可能です。
 
+## 📚 詳細ドキュメント
+
+より詳しい情報については、専用のHTMLドキュメントをご覧ください：
+
+- **[📖 ドキュメントホーム](docs/index.html)** - 全体概要とナビゲーション
+- **[🎮 ユーザーガイド](docs/user-guide.html)** - ゲームルール・操作方法・戦術ガイド  
+- **[💻 インストールガイド](docs/installation.html)** - Windows・macOS・Linux対応の詳細セットアップ
+- **[🤖 AI戦略解説](docs/ai-strategy.html)** - 距離ベースアルゴリズムと3つの戦略の詳細
+- **[🔧 開発者向け](docs/development.html)** - 技術仕様・API・拡張方法
+
+> **💡 ヒント**: ローカルでHTMLドキュメントを開くには、`docs/index.html`をブラウザで開いてください。
+
 ## ゲームの基本ルール
 
 ### Syncridorとは

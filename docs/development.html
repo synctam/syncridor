@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>開発者向けドキュメント - Syncridor</title>
+    <link rel="stylesheet" href="css/style.css">
+    <meta name="description" content="Syncridorの技術仕様、API、コード構造、開発環境の詳細ガイド">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔧 開発者向けドキュメント</h1>
+            <p>技術仕様・API・拡張方法</p>
+        </header>
+
+        <nav>
+            <ul>
+                <li><a href="index.html">ホーム</a></li>
+                <li><a href="user-guide.html">ユーザーガイド</a></li>
+                <li><a href="installation.html">インストール</a></li>
+                <li><a href="ai-strategy.html">AI戦略</a></li>
+                <li><a href="development.html" class="active">開発者向け</a></li>
+            </ul>
+        </nav>
+
+        <main>
+            <h1>開発者向けドキュメント</h1>
+
+            <div class="info-box">
+                <p><strong>Syncridor</strong>は、Pythonとpygameを使用したモジュラー設計のボードゲーム実装です。このドキュメントでは、コード構造、API、テスト、拡張方法について詳しく説明します。</p>
+            </div>
+
+            <h2>🏗️ アーキテクチャ概要</h2>
+
+            <h3>システム構成</h3>
+            <pre><code>Syncridor システム構成
+├── ゲームロジック層 (SyncridorGame)
+│   ├── 盤面状態管理
+│   ├── ルール検証エンジン
+│   ├── AI戦略実装
+│   └── パスファインディング
+├── UI層 (SyncridorUI)
+│   ├── Pygame描画システム
+│   ├── イベント処理
+│   ├── メニューシステム
+│   └── 視覚効果
+└── データモデル層
+    ├── Wall クラス
+    ├── 列挙型 (GameMode, Player, AIStrategy)
+    └── 設定・定数</code></pre>
+
+            <h3>主要設計思想</h3>
+            <div class="success-box">
+                <h4>設計原則</h4>
+                <ul>
+                    <li><strong>関心の分離</strong>: ゲームロジックとUIを完全分離</li>
+                    <li><strong>モジュラー設計</strong>: 独立したコンポーネント構成</li>
+                    <li><strong>拡張性</strong>: 新しいAI戦略やUIの容易な追加</li>
+                    <li><strong>テスタビリティ</strong>: 包括的なユニットテスト対応</li>
+                </ul>
+            </div>
+
+            <h2>📋 主要クラス・API リファレンス</h2>
+
+            <h3>SyncridorGame クラス</h3>
+            <p>ゲームロジックの中核を担うメインクラス</p>
+
+            <h4>初期化</h4>
+            <pre><code>class SyncridorGame:
+    def __init__(self, mode: GameMode):
+        """
+        ゲームインスタンスを初期化
+        
+        Args:
+            mode (GameMode): ゲームモード
+                - HUMAN_VS_HUMAN: 人間対人間
+                - HUMAN_VS_AI: 人間対AI  
+                - AI_VS_AI: AI対AI
+        """</code></pre>
+
+            <h4>主要メソッド</h4>
+            <table>
+                <thead>
+                    <tr>
+                        <th>メソッド</th>
+                        <th>戻り値</th>
+                        <th>説明</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>move_player(new_pos)</code></td>
+                        <td><code>bool</code></td>
+                        <td>プレイヤーを指定位置に移動</td>
+                    </tr>
+                    <tr>
+                        <td><code>place_wall(wall)</code></td>
+                        <td><code>bool</code></td>
+                        <td>壁を配置（成功/失敗を返す）</td>
+                    </tr>
+                    <tr>
+                        <td><code>get_shortest_path(start, goal)</code></td>
+                        <td><code>list</code></td>
+                        <td>最短経路を計算・取得</td>
+                    </tr>
+                    <tr>
+                        <td><code>ai_make_move()</code></td>
+                        <td><code>bool</code></td>
+                        <td>AI が1手を実行</td>
+                    </tr>
+                    <tr>
+                        <td><code>reset_game()</code></td>
+                        <td><code>None</code></td>
+                        <td>ゲーム状態を初期化</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h4>重要なプロパティ</h4>
+            <pre><code># プレイヤー位置
+self.player1_pos: tuple[int, int]  # (row, col)
+self.player2_pos: tuple[int, int]  # (row, col)
+
+# 壁の残数
+self.player1_walls: int  # 0-10
+self.player2_walls: int  # 0-10
+
+# 配置済み壁
+self.walls: list[Wall]
+
+# ゲーム状態
+self.current_player: Player
+self.game_over: bool
+self.winner: Player | None
+
+# AI戦略
+self.player1_strategy: AIStrategy
+self.player2_strategy: AIStrategy</code></pre>
+
+            <h3>Wall クラス</h3>
+            <p>壁オブジェクトのデータクラス</p>
+
+            <pre><code>class Wall:
+    def __init__(self, row: int, col: int, is_horizontal: bool, player: Player = None):
+        """
+        壁を初期化
+        
+        Args:
+            row (int): 行位置 (0-7)
+            col (int): 列位置 (0-7)  
+            is_horizontal (bool): True=水平, False=垂直
+            player (Player): 配置したプレイヤー
+        """
+        self.row = row
+        self.col = col
+        self.is_horizontal = is_horizontal
+        self.player = player
+
+    def __eq__(self, other):
+        """壁の等価性を判定（位置と方向が同じ）"""
+        return (self.row == other.row and 
+                self.col == other.col and 
+                self.is_horizontal == other.is_horizontal)</code></pre>
+
+            <h3>列挙型定義</h3>
+            <pre><code>from enum import Enum
+
+class GameMode(Enum):
+    HUMAN_VS_HUMAN = "human_vs_human"
+    HUMAN_VS_AI = "human_vs_ai" 
+    AI_VS_AI = "ai_vs_ai"
+
+class Player(Enum):
+    PLAYER1 = 1  # 青色プレイヤー（下から上へ）
+    PLAYER2 = 2  # 赤色プレイヤー（上から下へ）
+
+class AIStrategy(Enum):
+    AGGRESSIVE = "aggressive"  # 攻撃的
+    DEFENSIVE = "defensive"    # 守備的  
+    BALANCED = "balanced"      # バランス型</code></pre>
+
+            <h2>🎮 UI システム (SyncridorUI)</h2>
+
+            <h3>描画システム</h3>
+            <p>Pygameベースの2D描画システムで、リアルタイムなゲーム状態の可視化を提供</p>
+
+            <h4>主要描画メソッド</h4>
+            <table>
+                <thead>
+                    <tr>
+                        <th>メソッド</th>
+                        <th>説明</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>draw_board()</code></td>
+                        <td>9×9ゲームボードの描画</td>
+                    </tr>
+                    <tr>
+                        <td><code>draw_players()</code></td>
+                        <td>プレイヤー駒の描画（青・赤）</td>
+                    </tr>
+                    <tr>
+                        <td><code>draw_walls()</code></td>
+                        <td>配置済み壁の描画</td>
+                    </tr>
+                    <tr>
+                        <td><code>draw_preview_wall()</code></td>
+                        <td>配置予定壁のプレビュー</td>
+                    </tr>
+                    <tr>
+                        <td><code>draw_info()</code></td>
+                        <td>ゲーム情報（残り壁数、現在のプレイヤー）</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>イベント処理</h3>
+            <pre><code>def handle_events(self):
+    """pygame イベントの処理"""
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            return False
+            
+        elif event.type == pygame.MOUSEBUTTONDOWN:
+            if event.button == 1:  # 左クリック = 移動
+                self.handle_player_move(event.pos)
+            elif event.button == 3:  # 右クリック = 壁配置
+                self.handle_wall_placement(event.pos)
+                
+        elif event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_SPACE:  # 壁の向き切り替え
+                self.horizontal_wall = not self.horizontal_wall
+            elif event.key == pygame.K_r:  # リスタート
+                self.game.reset_game()
+            elif event.key == pygame.K_m:  # メインメニュー
+                self.show_menu = True</code></pre>
+
+            <h2>🧪 テストシステム</h2>
+
+            <h3>テスト構成</h3>
+            <p>包括的なユニットテストスイートで品質を保証</p>
+
+            <div class="info-box">
+                <h4>テストカバレッジ</h4>
+                <ul>
+                    <li><strong>基本機能</strong>: ゲーム初期化、リセット、位置検証</li>
+                    <li><strong>プレイヤー移動</strong>: 基本移動、無効移動、勝利条件</li>
+                    <li><strong>壁配置</strong>: 有効配置、重複防止、移動阻止</li>
+                    <li><strong>パスファインディング</strong>: BFS、最短距離計算</li>
+                    <li><strong>AI戦略</strong>: 戦略割り当て、移動実行</li>
+                    <li><strong>エッジケース</strong>: ジャンプ移動、境界処理</li>
+                </ul>
+            </div>
+
+            <h3>テスト実行</h3>
+            <pre><code># 全テストの実行
+python test_syncridor.py
+
+# 特定のテストクラスのみ実行
+python -m unittest test_syncridor.TestWallPlacement
+
+# 詳細出力でテスト実行
+python -m unittest test_syncridor -v</code></pre>
+
+            <h3>テスト例</h3>
+            <pre><code>class TestPlayerMovement(unittest.TestCase):
+    def setUp(self):
+        self.game = SyncridorGame(GameMode.HUMAN_VS_HUMAN)
+    
+    def test_basic_movement(self):
+        """基本的な移動テスト"""
+        initial_pos = self.game.player1_pos
+        new_pos = (initial_pos[0] - 1, initial_pos[1])
+        
+        result = self.game.move_player(new_pos)
+        self.assertTrue(result)
+        self.assertEqual(self.game.player1_pos, new_pos)
+        self.assertEqual(self.game.current_player, Player.PLAYER2)</code></pre>
+
+            <h2>🔧 開発環境セットアップ</h2>
+
+            <h3>必要な環境</h3>
+            <ul>
+                <li><strong>Python</strong>: 3.8+ （推奨: 3.11+）</li>
+                <li><strong>pygame</strong>: 2.6+ （推奨: 最新版）</li>
+                <li><strong>Git</strong>: バージョン管理</li>
+                <li><strong>エディタ</strong>: VSCode, PyCharm 等</li>
+            </ul>
+
+            <h3>開発環境構築</h3>
+            <pre><code># 1. リポジトリのクローン
+git clone https://github.com/synctam/syncridor.git
+cd syncridor
+
+# 2. 仮想環境の作成
+python -m venv venv
+
+# 3. 仮想環境のアクティベート
+# Linux/Mac:
+source venv/bin/activate
+# Windows:
+venv\Scripts\activate
+
+# 4. 依存関係のインストール
+pip install pygame
+
+# 5. 開発時の追加パッケージ（オプション）
+pip install pylint black pytest  # コード品質ツール</code></pre>
+
+            <h3>推奨IDE設定</h3>
+
+            <h4>Visual Studio Code</h4>
+            <pre><code># .vscode/settings.json
+{
+    "python.defaultInterpreterPath": "./venv/bin/python",
+    "python.linting.enabled": true,
+    "python.linting.pylintEnabled": true,
+    "python.formatting.provider": "black",
+    "files.associations": {
+        "*.py": "python"
+    }
+}</code></pre>
+
+            <h4>PyCharm設定</h4>
+            <ul>
+                <li><strong>Project Interpreter</strong>: venv/bin/python を選択</li>
+                <li><strong>Code Style</strong>: PEP 8 準拠設定</li>
+                <li><strong>Run Configuration</strong>: syncridor_game.py をメインモジュールに設定</li>
+            </ul>
+
+            <h2>🚀 拡張開発ガイド</h2>
+
+            <h3>新しいAI戦略の追加</h3>
+
+            <h4>1. AIStrategy列挙型の拡張</h4>
+            <pre><code>class AIStrategy(Enum):
+    AGGRESSIVE = "aggressive"
+    DEFENSIVE = "defensive"
+    BALANCED = "balanced"
+    MINIMAX = "minimax"        # 新しい戦略
+    LEARNED = "learned"        # 機械学習ベース</code></pre>
+
+            <h4>2. 戦略メソッドの実装</h4>
+            <pre><code>def ai_make_move_minimax(self):
+    """ミニマックス法による戦略"""
+    def minimax(position, depth, maximizing_player):
+        if depth == 0 or self.game_over:
+            return self.evaluate_position(position)
+        
+        if maximizing_player:
+            max_eval = float('-inf')
+            for move in self.get_possible_moves():
+                eval_score = minimax(move, depth-1, False)
+                max_eval = max(max_eval, eval_score)
+            return max_eval
+        else:
+            min_eval = float('inf')
+            for move in self.get_opponent_moves():
+                eval_score = minimax(move, depth-1, True)
+                min_eval = min(min_eval, eval_score)
+            return min_eval
+    
+    best_move = None
+    best_score = float('-inf')
+    
+    for move in self.get_possible_moves():
+        score = minimax(move, depth=3, maximizing_player=False)
+        if score > best_score:
+            best_score = score
+            best_move = move
+    
+    return self.execute_move(best_move)</code></pre>
+
+            <h4>3. 戦略の登録</h4>
+            <pre><code>def ai_make_move(self):
+    """現在のプレイヤーのAI戦略に応じて行動を決定"""
+    strategy = (self.player1_strategy if self.current_player == Player.PLAYER1 
+                else self.player2_strategy)
+    
+    if strategy == AIStrategy.AGGRESSIVE:
+        return self.ai_make_move_aggressive()
+    elif strategy == AIStrategy.DEFENSIVE:
+        return self.ai_make_move_defensive()
+    elif strategy == AIStrategy.BALANCED:
+        return self.ai_make_move_balanced()
+    elif strategy == AIStrategy.MINIMAX:
+        return self.ai_make_move_minimax()      # 新しい戦略
+    elif strategy == AIStrategy.LEARNED:
+        return self.ai_make_move_learned()      # 機械学習戦略</code></pre>
+
+            <h3>新しいゲームモードの追加</h3>
+
+            <h4>1. GameMode の拡張</h4>
+            <pre><code>class GameMode(Enum):
+    HUMAN_VS_HUMAN = "human_vs_human"
+    HUMAN_VS_AI = "human_vs_ai"
+    AI_VS_AI = "ai_vs_ai"
+    TOURNAMENT = "tournament"     # トーナメントモード
+    TRAINING = "training"         # 訓練モード</code></pre>
+
+            <h4>2. モード固有のロジック実装</h4>
+            <pre><code>def handle_tournament_mode(self):
+    """トーナメントモードの処理"""
+    if not hasattr(self, 'tournament_matches'):
+        self.tournament_matches = self.setup_tournament()
+    
+    current_match = self.tournament_matches[self.current_match_index]
+    
+    if self.game_over:
+        self.record_tournament_result(current_match, self.winner)
+        self.advance_tournament()
+    
+    return self.continue_tournament()</code></pre>
+
+            <h3>UI カスタマイゼーション</h3>
+
+            <h4>新しいテーマの追加</h4>
+            <pre><code>class ColorTheme:
+    def __init__(self, name):
+        self.name = name
+        
+    def get_colors(self):
+        themes = {
+            'classic': {
+                'background': (240, 240, 240),
+                'board': (139, 69, 19),
+                'player1': (0, 100, 200),
+                'player2': (200, 50, 50)
+            },
+            'dark': {
+                'background': (40, 40, 40),
+                'board': (60, 60, 60),
+                'player1': (100, 150, 255),
+                'player2': (255, 100, 100)
+            },
+            'neon': {
+                'background': (10, 10, 30),
+                'board': (30, 30, 60),
+                'player1': (0, 255, 255),
+                'player2': (255, 0, 255)
+            }
+        }
+        return themes.get(self.name, themes['classic'])</code></pre>
+
+            <h2>🔍 デバッグ・プロファイリング</h2>
+
+            <h3>デバッグ機能の追加</h3>
+            <pre><code>def enable_debug_mode(self):
+    """デバッグモードの有効化"""
+    self.debug_mode = True
+    self.debug_info = {
+        'move_count': 0,
+        'wall_placements': [],
+        'path_calculations': 0,
+        'ai_decision_times': []
+    }
+
+def log_debug_info(self, action, details):
+    """デバッグ情報のログ出力"""
+    if self.debug_mode:
+        timestamp = time.time()
+        print(f"[DEBUG {timestamp:.3f}] {action}: {details}")
+        
+        # ファイルへの出力
+        with open('debug.log', 'a') as f:
+            f.write(f"{timestamp:.3f},{action},{details}\n")</code></pre>
+
+            <h3>パフォーマンス測定</h3>
+            <pre><code>import cProfile
+import pstats
+
+def profile_ai_performance():
+    """AI戦略のパフォーマンスを測定"""
+    profiler = cProfile.Profile()
+    
+    # AIの実行をプロファイル
+    profiler.enable()
+    game = SyncridorGame(GameMode.AI_VS_AI)
+    
+    for _ in range(100):  # 100回の行動
+        game.ai_make_move()
+        
+    profiler.disable()
+    
+    # 結果の分析
+    stats = pstats.Stats(profiler)
+    stats.sort_stats('cumulative')
+    stats.print_stats(10)  # 上位10関数</code></pre>
+
+            <h2>📚 コーディング規約</h2>
+
+            <h3>命名規則</h3>
+            <ul>
+                <li><strong>クラス名</strong>: PascalCase (例: <code>SyncridorGame</code>)</li>
+                <li><strong>関数・変数名</strong>: snake_case (例: <code>get_shortest_path</code>)</li>
+                <li><strong>定数</strong>: UPPER_SNAKE_CASE (例: <code>BOARD_SIZE</code>)</li>
+                <li><strong>プライベートメソッド</strong>: 先頭にアンダースコア (例: <code>_calculate_score</code>)</li>
+            </ul>
+
+            <h3>docstring 規則</h3>
+            <pre><code>def get_shortest_path(self, start_pos, goal_row, walls=None):
+    """BFS（幅優先探索）でゴールまでの最短経路を計算
+    
+    Args:
+        start_pos (tuple[int, int]): 開始位置 (row, col)
+        goal_row (int): ゴール行（プレイヤー1: 0, プレイヤー2: 8）
+        walls (list[Wall], optional): 考慮する壁のリスト. Defaults to None.
+    
+    Returns:
+        list[tuple[int, int]]: 最短経路のリスト [(row, col), ...]
+        空リストが返される場合は経路なし
+        
+    Raises:
+        ValueError: start_pos が無効な位置の場合
+        
+    Example:
+        >>> game = SyncridorGame(GameMode.HUMAN_VS_HUMAN)
+        >>> path = game.get_shortest_path((8, 4), 0)
+        >>> print(f"Path length: {len(path)}")
+        Path length: 9
+    """</code></pre>
+
+            <h2>🚢 デプロイメント・配布</h2>
+
+            <h3>実行可能ファイルの作成</h3>
+            <pre><code># PyInstaller を使用した配布パッケージ作成
+pip install pyinstaller
+
+# 単一実行ファイルの作成
+pyinstaller --onefile --windowed syncridor_game.py
+
+# 詳細設定でのパッケージ作成
+pyinstaller --onefile --windowed --icon=icon.ico \
+            --add-data "assets;assets" \
+            --name "Syncridor" syncridor_game.py</code></pre>
+
+            <h3>CI/CD パイプライン例</h3>
+            <pre><code># .github/workflows/test.yml
+name: Test Suite
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.8, 3.9, 3.10, 3.11]
+    
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v3
+      with:
+        python-version: ${{ matrix.python-version }}
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pygame
+    
+    - name: Run tests
+      run: python test_syncridor.py</code></pre>
+
+            <h2>🔗 関連リソース</h2>
+            <ul>
+                <li><a href="ai-strategy.html">AI戦略詳細</a> - アルゴリズムの詳細解説</li>
+                <li><a href="user-guide.html">ユーザーガイド</a> - 基本的な使用方法</li>
+                <li><a href="../test_syncridor.py">テストソースコード</a> - 実装例の参考</li>
+                <li><a href="../syncridor_game.py">メインソースコード</a> - 完全な実装</li>
+                <li><a href="https://github.com/synctam/syncridor" target="_blank">GitHub リポジトリ</a></li>
+            </ul>
+
+        </main>
+
+        <footer>
+            <p>&copy; 2025 synctam@gmail.com | Licensed under MIT License | Developed with ❤️ and Claude AI</p>
+        </footer>
+    </div>
+</body>
+</html>
