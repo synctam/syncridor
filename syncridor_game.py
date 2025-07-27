@@ -673,6 +673,35 @@ class SyncridorUI:
             
             pygame.draw.rect(self.screen, wall_color, (x, y, width, height))
     
+    def draw_wall_preview(self):
+        if not self.placing_wall:
+            return
+            
+        mouse_pos = pygame.mouse.get_pos()
+        cell = self.get_cell_from_mouse(mouse_pos)
+        
+        if cell and 0 <= cell[0] < self.game.board_size - 1 and 0 <= cell[1] < self.game.board_size - 1:
+            row, col = cell
+            preview_wall = Wall(row, col, self.wall_horizontal)
+            
+            if self.game.can_place_wall(preview_wall):
+                if self.wall_horizontal:
+                    x = BOARD_OFFSET_X + col * CELL_SIZE
+                    y = BOARD_OFFSET_Y + (row + 1) * CELL_SIZE - WALL_THICKNESS // 2
+                    width = CELL_SIZE * 2
+                    height = WALL_THICKNESS
+                else:
+                    x = BOARD_OFFSET_X + (col + 1) * CELL_SIZE - WALL_THICKNESS // 2
+                    y = BOARD_OFFSET_Y + row * CELL_SIZE
+                    width = WALL_THICKNESS
+                    height = CELL_SIZE * 2
+                
+                # 半透明のプレビュー表示
+                preview_color = (*BLUE, 128) if self.game.current_player == Player.PLAYER1 else (*RED, 128)
+                preview_surface = pygame.Surface((width, height), pygame.SRCALPHA)
+                preview_surface.fill(preview_color)
+                self.screen.blit(preview_surface, (x, y))
+    
     def draw_players(self):
         # プレイヤー1 (青)
         row1, col1 = self.game.player1_pos
@@ -697,15 +726,23 @@ class SyncridorUI:
         walls2_text = f"Red Walls: {self.game.player2_walls}"
         walls1_surface = self.small_font.render(walls1_text, True, BLUE)
         walls2_surface = self.small_font.render(walls2_text, True, RED)
-        self.screen.blit(walls1_surface, (10, 40))
-        self.screen.blit(walls2_surface, (10, 70))
+        
+        # 壁の向き表示
+        if self.placing_wall:
+            orientation_text = f"Wall Direction: {'Horizontal' if self.wall_horizontal else 'Vertical'} (Press R to rotate)"
+            orientation_surface = self.small_font.render(orientation_text, True, BLACK)
+            self.screen.blit(orientation_surface, (10, 35))
+        # 壁の残り数の位置を調整
+        wall_y_offset = 65 if self.placing_wall else 40
+        self.screen.blit(walls1_surface, (10, wall_y_offset))
+        self.screen.blit(walls2_surface, (10, wall_y_offset + 30))
         
         # 操作説明
         instructions = [
             "Left click: Move/Select",
             "Right click: Place wall",
-            "Space: Toggle wall direction",
-            "R: Restart game",
+            "R: Rotate wall direction",
+            "Space: Toggle wall mode",
             "M: Main menu"
         ]
         
@@ -767,9 +804,12 @@ class SyncridorUI:
     def handle_game_input(self, event):
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_SPACE:
-                self.wall_horizontal = not self.wall_horizontal
+                self.placing_wall = not self.placing_wall
             elif event.key == pygame.K_r:
-                self.game.reset_game()
+                if self.placing_wall:
+                    self.wall_horizontal = not self.wall_horizontal
+                else:
+                    self.game.reset_game()
             elif event.key == pygame.K_m:
                 self.show_menu = True
                 self.game = None
@@ -782,15 +822,21 @@ class SyncridorUI:
             
             mouse_pos = pygame.mouse.get_pos()
             
-            if event.button == 1:  # 左クリック - 移動
-                cell = self.get_cell_from_mouse(mouse_pos)
-                if cell:
-                    self.game.move_player(cell)
+            if event.button == 1:  # 左クリック
+                if self.placing_wall:
+                    # 壁配置モードの場合
+                    wall = self.get_wall_from_mouse(mouse_pos)
+                    if wall:
+                        if self.game.place_wall(wall):
+                            self.placing_wall = False  # 配置成功後は壁モードを解除
+                else:
+                    # 通常の移動
+                    cell = self.get_cell_from_mouse(mouse_pos)
+                    if cell:
+                        self.game.move_player(cell)
             
-            elif event.button == 3:  # 右クリック - 壁配置
-                wall = self.get_wall_from_mouse(mouse_pos)
-                if wall:
-                    self.game.place_wall(wall)
+            elif event.button == 3:  # 右クリック - 壁配置モード切り替え
+                self.placing_wall = not self.placing_wall
     
     def update_ai(self):
         current_time = time.time()
@@ -829,6 +875,7 @@ class SyncridorUI:
                     self.update_ai()
                     self.draw_board()
                     self.draw_walls()
+                    self.draw_wall_preview()
                     self.draw_players()
                     self.draw_ui()
             
