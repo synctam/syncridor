@@ -755,9 +755,9 @@ class SyncridorUI:
             text_surface = self.small_font.render(instruction, True, BLACK)
             self.screen.blit(text_surface, (WINDOW_WIDTH - 200, 10 + i * 25))
         
-        # バージョン表示（Web版 - 左上に移動）
+        # バージョン表示（Web版 - 左上の操作説明の下に配置）
         version_text = self.small_font.render(f"{VERSION}", True, BLACK)
-        self.screen.blit(version_text, (10, WINDOW_HEIGHT - 25))
+        self.screen.blit(version_text, (10, 130))
         
         # ゲーム終了時
         if self.game.game_over:
