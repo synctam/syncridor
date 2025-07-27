@@ -163,6 +163,18 @@ def ai_make_move_defensive(self):
 python syncridor_game.py
 ```
 
+### テスト実行
+```bash
+# 全テストの実行
+python test_syncridor.py
+
+# 仮想環境を使用する場合
+source venv/bin/activate  # Linux/Mac
+# または
+venv\Scripts\activate     # Windows
+python test_syncridor.py
+```
+
 ### ゲームモード選択
 - **1キー**: 人間 vs 人間
 - **2キー**: 人間 vs AI
@@ -190,10 +202,30 @@ pip install pygame
 ```
 quoridor/
 ├── syncridor_game.py   # メインプログラム
+├── test_syncridor.py   # テストスイート
 ├── LICENSE            # MIT License 全文
 ├── README.md          # この文書
+├── .gitignore         # Git除外設定
 └── venv/              # 仮想環境
 ```
+
+## テストについて
+
+### テストカバレッジ
+このプロジェクトには包括的なテストスイートが含まれています：
+
+- **基本機能テスト**: ゲーム初期化、リセット、位置検証
+- **プレイヤー移動テスト**: 基本移動、無効移動、境界チェック、勝利条件
+- **壁配置テスト**: 有効配置、重複防止、移動阻止、使用制限
+- **パスファインディングテスト**: 最短距離計算、経路取得、ブロック検出
+- **AI戦略テスト**: 戦略割り当て、壁配置アルゴリズム、移動実行
+- **ゲームモードテスト**: 各種モードの動作確認
+- **エッジケーステスト**: ジャンプ移動、斜めジャンプ
+
+### テスト実行結果
+- **25個のテストケース**
+- **全テスト正常完了** ✅
+- **実行時間**: 約0.135秒
 
 ## 今後の改善案
 
