@@ -755,12 +755,9 @@ class SyncridorUI:
             text_surface = self.small_font.render(instruction, True, BLACK)
             self.screen.blit(text_surface, (WINDOW_WIDTH - 200, 10 + i * 25))
         
-        # バージョン表示（Web版でより目立つように）
-        version_text = self.small_font.render(f"Version: {VERSION}", True, BLACK)
-        version_rect = pygame.Rect(WINDOW_WIDTH - 120, WINDOW_HEIGHT - 35, 100, 25)
-        pygame.draw.rect(self.screen, WHITE, version_rect)
-        pygame.draw.rect(self.screen, BLACK, version_rect, 1)
-        self.screen.blit(version_text, (WINDOW_WIDTH - 115, WINDOW_HEIGHT - 30))
+        # バージョン表示（Web版 - 左上に移動）
+        version_text = self.small_font.render(f"{VERSION}", True, BLACK)
+        self.screen.blit(version_text, (10, WINDOW_HEIGHT - 25))
         
         # ゲーム終了時
         if self.game.game_over:
